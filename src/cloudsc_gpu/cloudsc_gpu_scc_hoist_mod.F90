@@ -353,7 +353,7 @@ CONTAINS
     !REAL(KIND=JPRB) :: ZQTMIN(KLON,KLEV)
     !REAL(KIND=JPRB) :: ZQTMAX(KLON,KLEV)
     
-    REAL(KIND=JPRB), INTENT(INOUT) :: ZPFPLSX(KLON, KLEV + 1, NCLV)    ! generalized precipitation flux
+    REAL(KIND=JPRB), INTENT(INOUT) :: ZPFPLSX(KLON, 2, NCLV)    ! generalized precipitation flux
     REAL(KIND=JPRB), INTENT(INOUT) :: ZLNEG(KLON, KLEV, NCLV)    ! for negative correction diagnostics
     REAL(KIND=JPRB) :: ZMELTMAX
     REAL(KIND=JPRB) :: ZFRZMAX
@@ -486,6 +486,8 @@ CONTAINS
     REAL(KIND=JPRB) :: ZCOND1, ZQP
     
     REAL(KIND=JPRB) :: PSUM_SOLQA
+
+    INTEGER(KIND=JPIM) :: JK_I, JK_IP1
     
     
 #include "fcttre.func.h"
@@ -648,9 +650,9 @@ CONTAINS
     !-------------
 !$acc loop seq
     DO JM=1,NCLV
-      DO JK=1,KLEV + 1
-        ZPFPLSX(JL, JK, JM) = 0.0_JPRB          ! precip fluxes
-      END DO
+      ! DO JK=1,KLEV + 1
+      ZPFPLSX(JL, 1, JM) = 0.0_JPRB          ! precip fluxes
+      ! END DO
     END DO
 
     
@@ -659,6 +661,10 @@ CONTAINS
     ! ----------------------
 !$acc loop seq
     DO JK=1,KLEV + 1
+
+    ! Fortran counting is beautiful!
+    JK_I = MOD(JK+1, 2) + 1
+    JK_IP1 = MOD(JK+2, 2) + 1
 
     IF (1<=JK .AND. JK<=KLEV) THEN
       ZTP1(JL, JK) = PT(JL, JK) + PTSPHY*TENDENCY_TMP_T(JL, JK)
@@ -1630,7 +1636,7 @@ CONTAINS
           ! source from layer above
           !------------------------
           IF (JK > YRECLDP%NCLDTOP) THEN
-            ZFALLSRCE(JM) = ZPFPLSX(JL, JK, JM)*ZDTGDP
+            ZFALLSRCE(JM) = ZPFPLSX(JL, JK_I, JM)*ZDTGDP
             ZSOLQA(JM, JM) = ZSOLQA(JM, JM) + ZFALLSRCE(JM)
             ZQXFG(JM) = ZQXFG(JM) + ZFALLSRCE(JM)
             ! use first guess precip----------V
@@ -1757,7 +1763,7 @@ CONTAINS
           ! Note that with new prognostic variable it is now possible
           ! to REPLACE this with an explicit collection parametrization
           !------------------------------------------------------------------
-          ZPRECIP = (ZPFPLSX(JL, JK, NCLDQS) + ZPFPLSX(JL, JK, NCLDQR)) / MAX(ZEPSEC, ZCOVPTOT)
+          ZPRECIP = (ZPFPLSX(JL, JK_I, NCLDQS) + ZPFPLSX(JL, JK_I, NCLDQR)) / MAX(ZEPSEC, ZCOVPTOT)
           ZCFPR = 1.0_JPRB + YRECLDP%RPRC1*SQRT(MAX(ZPRECIP, 0.0_JPRB))
           !      ZCFPR=1.0_JPRB + RPRC1*SQRT(MAX(ZPRECIP,0.0_JPRB))*&
           !       &ZCOVPTOT(JL)/(MAX(ZA(JL,JK),ZEPSEC))
@@ -2499,11 +2505,11 @@ CONTAINS
       !------------------------------------------------------------------------
       
       DO JM=1,NCLV
-        ZPFPLSX(JL, JK + 1, JM) = ZFALLSINK(JM)*ZQXN(JM)*ZRDTGDP
+        ZPFPLSX(JL, JK_IP1, JM) = ZFALLSINK(JM)*ZQXN(JM)*ZRDTGDP
       END DO
       
       ! Ensure precipitation fraction is zero if no precipitation
-      ZQPRETOT = ZPFPLSX(JL, JK + 1, NCLDQS) + ZPFPLSX(JL, JK + 1, NCLDQR)
+      ZQPRETOT = ZPFPLSX(JL, JK_IP1, NCLDQS) + ZPFPLSX(JL, JK_IP1, NCLDQR)
       IF (ZQPRETOT < ZEPSEC) THEN
         ZCOVPTOT = 0.0_JPRB
       END IF
@@ -2571,9 +2577,9 @@ CONTAINS
     ! Copy general precip arrays back into PFP arrays for GRIB archiving
     ! Add rain and liquid fluxes, ice and snow fluxes
     !--------------------------------------------------------------------
-      PFPLSL(JL, JK) = ZPFPLSX(JL, JK, NCLDQR) + ZPFPLSX(JL, JK, NCLDQL)
-      PFPLSN(JL, JK) = ZPFPLSX(JL, JK, NCLDQS) + ZPFPLSX(JL, JK, NCLDQI)
-         
+      PFPLSL(JL, JK) = ZPFPLSX(JL, JK_I, NCLDQR) + ZPFPLSX(JL, JK_I, NCLDQL)
+      PFPLSN(JL, JK) = ZPFPLSX(JL, JK_I, NCLDQS) + ZPFPLSX(JL, JK_I, NCLDQI)
+
     if (1<=JK .AND. JK<=KLEV) THEN
       
       ZGDPH_R = -ZRG_R*(PAPH(JL, JK + 1) - PAPH(JL, JK))*ZQTMST
