@@ -614,7 +614,17 @@ CONTAINS
     !######################################################################
     !             1.  *** INITIAL VALUES FOR VARIABLES ***
     !######################################################################
+
+    !-----------------------------
+    ! Reset single level variables
+    !-----------------------------
     
+    ZANEWM1 = 0.0_JPRB
+    ZDA = 0.0_JPRB
+    ZCOVPCLR = 0.0_JPRB
+    ZCOVPMAX = 0.0_JPRB
+    ZCOVPTOT = 0.0_JPRB
+    ZCLDTOPDIST = 0.0_JPRB
     
     ! ----------------------
     ! non CLV initialization
@@ -746,12 +756,7 @@ CONTAINS
       !   ZFOEEICET(JL,JK)=MIN(FOEEICE(ZTP1(JL,JK))/PAP(JL,JK),0.5_JPRB)
       !   ZQSICE(JL,JK)=ZFOEEICET(JL,JK)
       !   ZQSICE(JL,JK)=ZQSICE(JL,JK)/(1.0_JPRB-RETV*ZQSICE(JL,JK))
-      
-    END DO
-    
-!$acc loop seq
-    DO JK=1,KLEV
-      
+            
       
       !------------------------------------------
       ! Ensure cloud fraction is between 0 and 1
@@ -769,8 +774,6 @@ CONTAINS
         ZLIQFRAC(JL, JK) = 0.0_JPRB
         ZICEFRAC(JL, JK) = 0.0_JPRB
       END IF
-      
-    END DO
     
     !######################################################################
     !        2.       *** CONSTANTS AND PARAMETERS ***
@@ -780,30 +783,19 @@ CONTAINS
     !  And initialize variables
     !------------------------------------------
     
-    !---------------------------------
-    ! Find tropopause level (ZTRPAUS)
-    !---------------------------------
-    ZTRPAUS = 0.1_JPRB
-    ZPAPHD = 1.0_JPRB / PAPH(JL, KLEV + 1)
-!$acc loop seq
-    DO JK=1,KLEV - 1
-      ZSIG = PAP(JL, JK)*ZPAPHD
-      IF (ZSIG > 0.1_JPRB .and. ZSIG < 0.4_JPRB .and. ZTP1(JL, JK) > ZTP1(JL, JK + 1)) THEN
-        ZTRPAUS = ZSIG
-      END IF
-    END DO
-    
-    !-----------------------------
-    ! Reset single level variables
-    !-----------------------------
-    
-    ZANEWM1 = 0.0_JPRB
-    ZDA = 0.0_JPRB
-    ZCOVPCLR = 0.0_JPRB
-    ZCOVPMAX = 0.0_JPRB
-    ZCOVPTOT = 0.0_JPRB
-    ZCLDTOPDIST = 0.0_JPRB
-    
+!     !---------------------------------
+!     ! Find tropopause level (ZTRPAUS)
+!     !---------------------------------
+!     ZTRPAUS = 0.1_JPRB
+!     ZPAPHD = 1.0_JPRB / PAPH(JL, KLEV + 1)
+! !$acc loop seq
+!     DO JK=1,KLEV - 1
+!       ZSIG = PAP(JL, JK)*ZPAPHD
+!       IF (ZSIG > 0.1_JPRB .and. ZSIG < 0.4_JPRB .and. ZTP1(JL, JK) > ZTP1(JL, JK + 1)) THEN
+!         ZTRPAUS = ZSIG
+!       END IF
+!     END DO
+         
     !######################################################################
     !           3.       *** PHYSICS ***
     !######################################################################
@@ -812,9 +804,9 @@ CONTAINS
     !----------------------------------------------------------------------
     !                       START OF VERTICAL LOOP
     !----------------------------------------------------------------------
-    
-!$acc loop seq
-    DO JK=YRECLDP%NCLDTOP,KLEV
+
+    ! No longer the start of the loop, but beginning of the main section
+    IF (YRECLDP%NCLDTOP<=JK .AND. JK<=KLEV) THEN
       
       !----------------------------------------------------------------------
       ! 3.0 INITIALIZE VARIABLES
@@ -2558,6 +2550,8 @@ CONTAINS
       ! Copy precipitation fraction into output variable
       !-------------------------------------------------
       PCOVPTOT(JL, JK) = ZCOVPTOT
+
+    END IF
       
     END DO
     ! on vertical level JK
