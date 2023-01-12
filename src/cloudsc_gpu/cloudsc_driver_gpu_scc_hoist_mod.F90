@@ -98,9 +98,9 @@ CONTAINS
 
     ! Local declarations of promoted temporaries 
     REAL(KIND=JPRB) :: ZFOEALFA(NPROMA, NLEV+1, NGPBLKS)
-    REAL(KIND=JPRB) :: ZTP1(NPROMA, NLEV, NGPBLKS)
+    ! REAL(KIND=JPRB) :: ZTP1(NPROMA, 2, NGPBLKS)
     ! REAL(KIND=JPRB) :: ZLI(NPROMA, NLEV, NGPBLKS)
-    REAL(KIND=JPRB) :: ZA(NPROMA, NLEV, NGPBLKS)
+    ! REAL(KIND=JPRB) :: ZA(NPROMA, 2, NGPBLKS)
     ! REAL(KIND=JPRB) :: ZAORIG(NPROMA, NLEV, NGPBLKS)
     ! REAL(KIND=JPRB) :: ZLIQFRAC(NPROMA, NLEV, NGPBLKS)
     ! REAL(KIND=JPRB) :: ZICEFRAC(NPROMA, NLEV, NGPBLKS)
@@ -133,7 +133,7 @@ CONTAINS
     ! Global timer for the parallel region
     CALL TIMER%START(NUMOMP)
 
-!$acc enter data create(ZFOEALFA, ZTP1, ZA, ZQX, ZQX0,  &
+!$acc enter data create(ZFOEALFA, ZQX, ZQX0,  &
 !$acc &   ZPFPLSX, ZLNEG, ZQXN2D)
 
 
@@ -191,7 +191,7 @@ CONTAINS
          & PFSQLTUR(:,:,IBL), PFSQITUR (:,:,IBL), &
          & PFPLSL(:,:,IBL),   PFPLSN(:,:,IBL),   PFHPSL(:,:,IBL),   PFHPSN(:,:,IBL),&
          & LOCAL_YRECLDP, &
-         & ZFOEALFA(:,:,IBL), ZTP1(:,:,IBL), ZA(:,:,IBL), &
+         & ZFOEALFA(:,:,IBL), &
          & ZQX(:,:,:,IBL), ZQX0(:,:,:,IBL), ZPFPLSX(:,:,:,IBL), &
          & ZQXN2D(:,:,:,IBL),  &
          & JL=JL)
