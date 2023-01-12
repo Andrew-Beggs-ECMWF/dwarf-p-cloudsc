@@ -610,6 +610,8 @@ CONTAINS
     ! Need to rationalise this at some point
     LLFALL(NCLDQI) = .false.
     
+    PRAINFRAC_TOPRFZ(JL) = 0.0_JPRB      ! rain fraction at top of refreezing layer
+    LLRAINLIQ = .true.      ! Assume all raindrops are liquid initially
     
     !######################################################################
     !             1.  *** INITIAL VALUES FOR VARIABLES ***
@@ -625,6 +627,17 @@ CONTAINS
     ZCOVPMAX = 0.0_JPRB
     ZCOVPTOT = 0.0_JPRB
     ZCLDTOPDIST = 0.0_JPRB
+
+    !-------------
+    ! zero arrays
+    !-------------
+!$acc loop seq
+    DO JM=1,NCLV
+      DO JK=1,KLEV + 1
+        ZPFPLSX(JL, JK, JM) = 0.0_JPRB          ! precip fluxes
+      END DO
+    END DO
+
     
     ! ----------------------
     ! non CLV initialization
@@ -636,45 +649,24 @@ CONTAINS
       ZQX0(JL, JK, NCLDQV) = PQ(JL, JK) + PTSPHY*TENDENCY_TMP_Q(JL, JK)
       ZA(JL, JK) = PA(JL, JK) + PTSPHY*TENDENCY_TMP_A(JL, JK)
       ZAORIG(JL, JK) = PA(JL, JK) + PTSPHY*TENDENCY_TMP_A(JL, JK)
-    END DO
+    ! END DO
     
     ! -------------------------------------
     ! initialization for CLV family
     ! -------------------------------------
-!$acc loop seq
-    DO JM=1,NCLV - 1
-      DO JK=1,KLEV
+      DO JM=1,NCLV - 1
         ZQX(JL, JK, JM) = PCLV(JL, JK, JM) + PTSPHY*TENDENCY_TMP_CLD(JL, JK, JM)
         ZQX0(JL, JK, JM) = PCLV(JL, JK, JM) + PTSPHY*TENDENCY_TMP_CLD(JL, JK, JM)
       END DO
-    END DO
-    
-    !-------------
-    ! zero arrays
-    !-------------
-!$acc loop seq
-    DO JM=1,NCLV
-      DO JK=1,KLEV + 1
-        ZPFPLSX(JL, JK, JM) = 0.0_JPRB          ! precip fluxes
-      END DO
-    END DO
-    
-!$acc loop seq
-    DO JM=1,NCLV
-      DO JK=1,KLEV
+        
+      DO JM=1,NCLV
         ZQXN2D(JL, JK, JM) = 0.0_JPRB          ! end of timestep values in 2D
         ZLNEG(JL, JK, JM) = 0.0_JPRB          ! negative input check
       END DO
-    END DO
-    
-    PRAINFRAC_TOPRFZ(JL) = 0.0_JPRB      ! rain fraction at top of refreezing layer
-    LLRAINLIQ = .true.      ! Assume all raindrops are liquid initially
     
     ! ----------------------------------------------------
     ! Tidy up very small cloud cover or total cloud water
     ! ----------------------------------------------------
-!$acc loop seq
-    DO JK=1,KLEV
       IF (ZQX(JL, JK, NCLDQL) + ZQX(JL, JK, NCLDQI) < YRECLDP%RLMIN .or. ZA(JL, JK) < YRECLDP%RAMIN) THEN
         
         ! Evaporate small cloud liquid water amounts
@@ -697,16 +689,13 @@ CONTAINS
         ZA(JL, JK) = 0.0_JPRB
         
       END IF
-    END DO
     
     ! ---------------------------------
     ! Tidy up small CLV variables
     ! ---------------------------------
-    !DIR$ IVDEP
-!$acc loop seq
-    DO JM=1,NCLV - 1
+
       !DIR$ IVDEP
-      DO JK=1,KLEV
+      DO JM=1,NCLV - 1
         !DIR$ IVDEP
         IF (ZQX(JL, JK, JM) < YRECLDP%RLMIN) THEN
           ZLNEG(JL, JK, JM) = ZLNEG(JL, JK, JM) + ZQX(JL, JK, JM)
@@ -718,15 +707,12 @@ CONTAINS
           ZQX(JL, JK, JM) = 0.0_JPRB
         END IF
       END DO
-    END DO
-    
     
     ! ------------------------------
     ! Define saturation values
     ! ------------------------------
-!$acc loop seq
-    DO JK=1,KLEV
-      !----------------------------------------
+
+    !----------------------------------------
       ! old *diagnostic* mixed phase saturation
       !----------------------------------------
       ZFOEALFA(JL, JK) = FOEALFA(ZTP1(JL, JK))
