@@ -591,6 +591,21 @@ CONTAINS
       PCOVPTOT(JL, JK) = 0.0_JPRB
       TENDENCY_LOC_CLD(JL, JK, NCLV) = 0.0_JPRB
     END DO
+
+    !--------
+    ! Fluxes:
+    !--------
+    PFSQLF(JL, 1) = 0.0_JPRB
+    PFSQIF(JL, 1) = 0.0_JPRB
+    PFSQRF(JL, 1) = 0.0_JPRB
+    PFSQSF(JL, 1) = 0.0_JPRB
+    PFCQLNG(JL, 1) = 0.0_JPRB
+    PFCQNNG(JL, 1) = 0.0_JPRB
+    PFCQRNG(JL, 1) = 0.0_JPRB      !rain
+    PFCQSNG(JL, 1) = 0.0_JPRB      !snow
+    ! fluxes due to turbulence
+    PFSQLTUR(JL, 1) = 0.0_JPRB
+    PFSQITUR(JL, 1) = 0.0_JPRB
     
     ! -------------------------
     ! set up fall speeds in m/s
@@ -643,7 +658,9 @@ CONTAINS
     ! non CLV initialization
     ! ----------------------
 !$acc loop seq
-    DO JK=1,KLEV
+    DO JK=1,KLEV + 1
+
+    IF (1<=JK .AND. JK<=KLEV) THEN
       ZTP1(JL, JK) = PT(JL, JK) + PTSPHY*TENDENCY_TMP_T(JL, JK)
       ZQX(JL, JK, NCLDQV) = PQ(JL, JK) + PTSPHY*TENDENCY_TMP_Q(JL, JK)
       ZQX0(JL, JK, NCLDQV) = PQ(JL, JK) + PTSPHY*TENDENCY_TMP_Q(JL, JK)
@@ -2538,8 +2555,9 @@ CONTAINS
       PCOVPTOT(JL, JK) = ZCOVPTOT
 
     END IF
+
+    END IF
       
-    END DO
     ! on vertical level JK
     !----------------------------------------------------------------------
     !                       END OF VERTICAL LOOP
@@ -2553,29 +2571,10 @@ CONTAINS
     ! Copy general precip arrays back into PFP arrays for GRIB archiving
     ! Add rain and liquid fluxes, ice and snow fluxes
     !--------------------------------------------------------------------
-!$acc loop seq
-    DO JK=1,KLEV + 1
       PFPLSL(JL, JK) = ZPFPLSX(JL, JK, NCLDQR) + ZPFPLSX(JL, JK, NCLDQL)
       PFPLSN(JL, JK) = ZPFPLSX(JL, JK, NCLDQS) + ZPFPLSX(JL, JK, NCLDQI)
-    END DO
-    
-    !--------
-    ! Fluxes:
-    !--------
-    PFSQLF(JL, 1) = 0.0_JPRB
-    PFSQIF(JL, 1) = 0.0_JPRB
-    PFSQRF(JL, 1) = 0.0_JPRB
-    PFSQSF(JL, 1) = 0.0_JPRB
-    PFCQLNG(JL, 1) = 0.0_JPRB
-    PFCQNNG(JL, 1) = 0.0_JPRB
-    PFCQRNG(JL, 1) = 0.0_JPRB      !rain
-    PFCQSNG(JL, 1) = 0.0_JPRB      !snow
-    ! fluxes due to turbulence
-    PFSQLTUR(JL, 1) = 0.0_JPRB
-    PFSQITUR(JL, 1) = 0.0_JPRB
-    
-!$acc loop seq
-    DO JK=1,KLEV
+         
+    if (1<=JK .AND. JK<=KLEV) THEN
       
       ZGDPH_R = -ZRG_R*(PAPH(JL, JK + 1) - PAPH(JL, JK))*ZQTMST
       PFSQLF(JL, JK + 1) = PFSQLF(JL, JK)
@@ -2618,13 +2617,12 @@ CONTAINS
       PFSQSF(JL, JK + 1) = PFSQSF(JL, JK + 1) + (ZQXN2D(JL, JK, NCLDQS) - ZQX0(JL, JK, NCLDQS))*ZGDPH_R
       ! snow, negative numbers
       PFCQSNG(JL, JK + 1) = PFCQSNG(JL, JK + 1) + ZLNEG(JL, JK, NCLDQS)*ZGDPH_R
-    END DO
-    
+
+    END IF
+      
     !-----------------------------------
     ! enthalpy flux due to precipitation
     !-----------------------------------
-!$acc loop seq
-    DO JK=1,KLEV + 1
       PFHPSL(JL, JK) = -RLVTT*PFPLSL(JL, JK)
       PFHPSN(JL, JK) = -RLSTT*PFPLSN(JL, JK)
     END DO
