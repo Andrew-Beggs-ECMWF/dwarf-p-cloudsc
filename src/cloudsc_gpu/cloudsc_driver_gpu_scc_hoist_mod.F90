@@ -106,7 +106,7 @@ CONTAINS
     ! REAL(KIND=JPRB) :: ZICEFRAC(NPROMA, NLEV, NGPBLKS)
     ! REAL(KIND=JPRB) :: ZQX(NPROMA, NLEV, NCLV, NGPBLKS)
     ! REAL(KIND=JPRB) :: ZQX0(NPROMA, NLEV, NCLV, NGPBLKS)
-    REAL(KIND=JPRB) :: ZPFPLSX(NPROMA, 2, NCLV, NGPBLKS)
+    ! REAL(KIND=JPRB) :: ZPFPLSX(NPROMA, 2, NCLV, NGPBLKS)
     ! REAL(KIND=JPRB) :: ZLNEG(NPROMA, NLEV, NCLV, NGPBLKS)
     ! REAL(KIND=JPRB) :: ZQXN2D(NPROMA, NLEV, NCLV, NGPBLKS)
     ! REAL(KIND=JPRB) :: ZQSMIX(NPROMA, NLEV, NGPBLKS)
@@ -133,7 +133,7 @@ CONTAINS
     ! Global timer for the parallel region
     CALL TIMER%START(NUMOMP)
 
-!$acc enter data create(ZPFPLSX)
+!! $ non  a c c enter data create(ZPFPLSX)
 
 
     ! Workaround for PGI / OpenACC oddities:
@@ -190,7 +190,7 @@ CONTAINS
          & PFSQLTUR(:,:,IBL), PFSQITUR (:,:,IBL), &
          & PFPLSL(:,:,IBL),   PFPLSN(:,:,IBL),   PFHPSL(:,:,IBL),   PFHPSN(:,:,IBL),&
          & LOCAL_YRECLDP, &
-         & ZPFPLSX(:,:,:,IBL), &
+         !& ZPFPLSX(:,:,:,IBL), &
          & JL=JL)
       ENDDO
     ENDDO
