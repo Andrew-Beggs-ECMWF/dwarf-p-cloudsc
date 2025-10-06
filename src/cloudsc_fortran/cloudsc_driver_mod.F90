@@ -113,7 +113,7 @@ CONTAINS
       write(0,1003) NUMPROC,NUMOMP,NGPTOTG,NPROMA,NGPBLKS
     end if
     call rave_name_event(1000,"Code regions")
-    call rave_name_value(1000,0,"Tear Down")
+    call rave_name_value(1000,0,"End")
     call rave_name_value(1000,1,"Driver Loop")
     call rave_name_value(1000,2,"Setup Consts")
     call rave_name_value(1000,3,"Init and Tidy")
@@ -174,6 +174,8 @@ CONTAINS
     call rave_name_value(1000,58,"6.1 Temperature")
     call rave_name_value(1000,59,"6.2 Humidity budget")
     call rave_name_value(1000,60,"Copy into output variable")
+    call rave_name_value(1000,61,"Tear Down")
+    call rave_name_value(1000,70,"Recalculate Sum Loop")
 
     ! Global timer for the parallel region
     CALL TIMER%START(NUMOMP)
@@ -221,7 +223,8 @@ CONTAINS
               & KFLDX, &
               & YDOMCST, YDOETHF, YDECLDP)
 
-         call rave_event_and_value(1000,0)
+         call rave_event_and_value(1000,0) ! pop 1
+         call rave_event_and_value(1000,61)
          ! Log number of columns processed by this thread
          CALL TIMER%THREAD_LOG(TID, IGPC=ICEND)
       ENDDO
