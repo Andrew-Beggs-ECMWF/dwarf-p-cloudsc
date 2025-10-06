@@ -555,7 +555,8 @@ ASSOCIATE( LAERICEAUTO=>YDECLDP%LAERICEAUTO, LAERICESED=>YDECLDP%LAERICESED, &
 !  0.0     Beginning of timestep book-keeping
 !----------------------------------------------------------------------
 
-call rave_event_and_value(1000,2)
+call rave_end_region("Driver Loop") ! pop 1
+call rave_begin_region("Setup Consts")
 !######################################################################
 !             0.  *** SET UP CONSTANTS ***
 !######################################################################
@@ -627,7 +628,7 @@ IMELT(NCLDQS)=NCLDQR
 ! -----------------------------------------------
 ! INITIALIZATION OF OUTPUT TENDENCIES
 ! -----------------------------------------------
-call rave_event_and_value(1000,6)
+call rave_begin_region("Array Zeroing")
 DO JK=1,KLEV
   DO JL=KIDIA,KFDIA
     PTENDENCY_LOC_T(JL,JK)=0.0_JPRB
@@ -642,8 +643,8 @@ DO JM=1,NCLV-1
     ENDDO
   ENDDO
 ENDDO
-call rave_event_and_value(1000,0) ! pop 6
-!call rave_event_and_value(1000,2)
+call rave_end_region("Array Zeroing") ! pop 6
+!call rave_begin_region("Setup Consts")
 ! -------------------------
 ! set up fall speeds in m/s
 ! -------------------------
@@ -664,8 +665,8 @@ LLFALL(NCLDQI)=.FALSE.
 !######################################################################
 !             1.  *** INITIAL VALUES FOR VARIABLES ***
 !######################################################################
-call rave_event_and_value(1000,0) ! pop 2
-call rave_event_and_value(1000,3)
+call rave_end_region("Setup Consts") ! pop 2
+call rave_begin_region("Init and Tidy")
 
 ! ----------------------
 ! non CLV initialization 
@@ -695,15 +696,15 @@ ENDDO
 !-------------
 ! zero arrays
 !-------------
-call rave_event_and_value(1000,6)
+call rave_begin_region("Array Zeroing")
 ZPFPLSX(:,:,:) = 0.0_JPRB ! precip fluxes
 ZQXN2D(:,:,:)  = 0.0_JPRB ! end of timestep values in 2D
 ZLNEG(:,:,:)   = 0.0_JPRB ! negative input check
 PRAINFRAC_TOPRFZ(:) =0.0_JPRB ! rain fraction at top of refreezing layer
 LLRAINLIQ(:) = .TRUE.  ! Assume all raindrops are liquid initially
-call rave_event_and_value(1000,0) ! pop 6
-call rave_event_and_value(1000,0) ! pop 3
-call rave_event_and_value(1000,7)
+call rave_end_region("Array Zeroing") ! pop 6
+call rave_end_region("Init and Tidy") ! pop 3
+call rave_begin_region("Tidy small cloud cover")
 ! ----------------------------------------------------
 ! Tidy up very small cloud cover or total cloud water
 ! ----------------------------------------------------
@@ -737,8 +738,8 @@ ENDDO
 ! ---------------------------------
 ! Tidy up small CLV variables
 ! ---------------------------------
-call rave_event_and_value(1000,0) ! pop 7
-call rave_event_and_value(1000,8)
+call rave_end_region("Tidy small cloud cover") ! pop 7
+call rave_begin_region("Tidy CLV")
 !DIR$ IVDEP
 DO JM=1,NCLV-1
 !DIR$ IVDEP
@@ -762,8 +763,8 @@ ENDDO
 ! ------------------------------
 ! Define saturation values
 ! ------------------------------
-call rave_event_and_value(1000,0) ! pop 8
-call rave_event_and_value(1000,9)
+call rave_end_region("Tidy CLV") ! pop 8
+call rave_begin_region("Define saturation values")
 DO JK=1,KLEV
   DO JL=KIDIA,KFDIA
     !----------------------------------------
@@ -801,8 +802,8 @@ DO JK=1,KLEV
 
 ENDDO
 
-call rave_event_and_value(1000,0) ! pop 9
-call rave_event_and_value(1000,10)
+call rave_end_region("Define saturation values") ! pop 9
+call rave_begin_region("Calculate liq ice fractions")
 DO JK=1,KLEV
   DO JL=KIDIA,KFDIA
 
@@ -838,8 +839,8 @@ ENDDO
 !---------------------------------
 ! Find tropopause level (ZTRPAUS)
 !---------------------------------
-call rave_event_and_value(1000,0) ! pop 10
-call rave_event_and_value(1000,11)
+call rave_end_region("Calculate liq ice fractions") ! pop 10
+call rave_begin_region("Find tropopause level")
 DO JL=KIDIA,KFDIA
   ZTRPAUS(JL)=0.1_JPRB
   ZPAPHD(JL)=1.0_JPRB/PAPH(JL,KLEV+1)
@@ -857,7 +858,7 @@ ENDDO
 ! Reset single level variables
 !-----------------------------
 
-call rave_event_and_value(1000,6)
+call rave_begin_region("Array Zeroing")
 ZANEWM1(:)  = 0.0_JPRB
 ZDA(:)      = 0.0_JPRB
 ZCOVPCLR(:) = 0.0_JPRB
@@ -869,9 +870,9 @@ ZCLDTOPDIST(:) = 0.0_JPRB
 !           3.       *** PHYSICS ***
 !######################################################################
 
-call rave_event_and_value(1000,0) ! pop 6
-call rave_event_and_value(1000,0) ! pop 11
-call rave_event_and_value(1000,4)
+call rave_end_region("Array Zeroing") ! pop 6
+call rave_end_region("Find tropopause level") ! pop 11
+call rave_begin_region("Vertical Loop")
 
 !----------------------------------------------------------------------
 !                       START OF VERTICAL LOOP
@@ -896,7 +897,7 @@ DO JK=NCLDTOP,KLEV
   ! Set KLON arrays to zero
   !---------------------------------
 
-call rave_event_and_value(1000,6)
+call rave_begin_region("Array Zeroing")
   ZLICLD(:)   = 0.0_JPRB                                
   ZRAINAUT(:) = 0.0_JPRB  ! currently needed for diags  
   ZRAINACC(:) = 0.0_JPRB  ! currently needed for diags  
@@ -936,8 +937,8 @@ call rave_event_and_value(1000,6)
   ZRATIO(:,:)    = 0.0_JPRB
   ZICETOT(:)     = 0.0_JPRB                            
   
-call rave_event_and_value(1000,0) ! pop 6
-call rave_event_and_value(1000,12)
+call rave_end_region("Array Zeroing") ! pop 6
+call rave_begin_region("derived variables needed")
   DO JL=KIDIA,KFDIA
 
     !-------------------------
@@ -996,8 +997,8 @@ call rave_event_and_value(1000,12)
   !------------------------------------------------
   ! Evaporate very small amounts of liquid and ice
   !------------------------------------------------
-call rave_event_and_value(1000,0) ! pop 12
-call rave_event_and_value(1000,13)
+call rave_end_region("derived variables needed") ! pop 12
+call rave_begin_region("Evaporate liquid and ice")
   DO JL=KIDIA,KFDIA
 
     IF (ZQX(JL,JK,NCLDQL) < RLMIN) THEN
@@ -1012,6 +1013,7 @@ call rave_event_and_value(1000,13)
 
   ENDDO
   
+call rave_end_region("Evaporate liquid and ice")
   !---------------------------------------------------------------------
   !  3.1  ICE SUPERSATURATION ADJUSTMENT
   !---------------------------------------------------------------------
@@ -1025,7 +1027,7 @@ call rave_event_and_value(1000,13)
   ! important for temperatures near to but below 0C
   !----------------------------------------------------------------------- 
 
-call rave_event_and_value(1000,14)
+call rave_begin_region("3.1.1 Supersaturation limit")
 !DIR$ NOFUSION
   DO JL=KIDIA,KFDIA
 
@@ -1035,9 +1037,9 @@ call rave_event_and_value(1000,14)
     ! Needs to be set for all temperatures
     ZFOKOOP(JL)=FOKOOP(ZTP1(JL,JK))
   ENDDO
-call rave_event_and_value(1000,0) ! pop 14
+call rave_end_region("3.1.1 Supersaturation limit") ! pop 14
   DO JL=KIDIA,KFDIA
-call rave_event_and_value(1000,14)
+call rave_begin_region("3.1.1 Supersaturation limit")
 
     IF (ZTP1(JL,JK)>=RTT .OR. NSSOPT==0) THEN
       ZFAC  = 1.0_JPRB
@@ -1053,8 +1055,8 @@ call rave_event_and_value(1000,14)
     ! [#Note: QSICE or QSLIQ]
     !-------------------------------------------------------------------
 
-call rave_event_and_value(1000,0) ! pop 14
-call rave_event_and_value(1000,15)
+call rave_end_region("3.1.1 Supersaturation limit") ! pop 14
+call rave_begin_region("3.1.2 Calculate supersaturation")
     ! Calculate supersaturation to add to cloud
     IF (ZA(JL,JK) > 1.0_JPRB-RAMIN) THEN
       ZSUPSAT(JL) = MAX((ZQX(JL,JK,NCLDQV)-ZFAC*ZQSICE(JL,JK))/ZCORQSICE(JL)&
@@ -1074,8 +1076,8 @@ call rave_event_and_value(1000,15)
     ! freezing then the supersaturation is turned instantly to ice.
     !--------------------------------------------------------------------
 
-call rave_event_and_value(1000,0) ! pop 15
-call rave_event_and_value(1000,16)
+call rave_end_region("3.1.2 Calculate supersaturation") ! pop 15
+call rave_begin_region("supersaturation into liquid water")
     IF (ZSUPSAT(JL) > ZEPSEC) THEN
 
       IF (ZTP1(JL,JK) > RTHOMO) THEN
@@ -1101,8 +1103,8 @@ call rave_event_and_value(1000,16)
     ! 3.1.3 Include supersaturation from previous timestep
     ! (Calculated in sltENDIF semi-lagrangian LDSLPHY=T)
     !-------------------------------------------------------    
-call rave_event_and_value(1000,0) ! pop 16
-call rave_event_and_value(1000,17)
+call rave_end_region("supersaturation into liquid water") ! pop 16
+call rave_begin_region("3.1.3 Include supersaturation")
       IF (PSUPSAT(JL,JK)>ZEPSEC) THEN
         IF (ZTP1(JL,JK) > RTHOMO) THEN
           ! Turn supersaturation into liquid water
@@ -1127,6 +1129,7 @@ call rave_event_and_value(1000,17)
 
   ENDDO ! on JL
 
+call rave_end_region("3.1.3 Include supersaturation")
   !---------------------------------------------------------------------
   !  3.2  DETRAINMENT FROM CONVECTION
   !---------------------------------------------------------------------
@@ -1138,8 +1141,7 @@ call rave_event_and_value(1000,17)
   !    term, since is now written in mass-flux terms  
   ! [#Note: Should use ZFOEALFACU used in convection rather than ZFOEALFA]
   !---------------------------------------------------------------------
-call rave_event_and_value(1000,0) ! pop 18
-call rave_event_and_value(1000,18)
+call rave_begin_region("3.2 DETRAINMENT FROM CONVECTION")
   IF (JK < KLEV .AND. JK>=NCLDTOP) THEN
 
     DO JL=KIDIA,KFDIA
@@ -1182,8 +1184,8 @@ call rave_event_and_value(1000,18)
   !               and 
   ! Evaporation of cloud within the layer
   !-----------------------------------------------
-call rave_event_and_value(1000,0) ! pop 18
-call rave_event_and_value(1000,19)
+call rave_end_region("3.2 DETRAINMENT FROM CONVECTION") ! pop 18
+call rave_begin_region("3.3 SUBSIDENCE COMPENSATING CONVECTIVE UPDRAUGHTS")
   IF (JK > NCLDTOP) THEN
 
     DO JL=KIDIA,KFDIA
@@ -1242,8 +1244,8 @@ call rave_event_and_value(1000,19)
   ! (Implicit - re. CFL limit on convective mass flux)
   !---------------------------------------------------------------------
 
-call rave_event_and_value(1000,0) ! pop 19
-call rave_event_and_value(1000,20)
+call rave_end_region("3.3 SUBSIDENCE COMPENSATING CONVECTIVE UPDRAUGHTS") ! pop 19
+call rave_begin_region("Subsidence sink of cloud")
   DO JL=KIDIA,KFDIA
 
     IF(JK<KLEV) THEN
@@ -1273,8 +1275,8 @@ call rave_event_and_value(1000,20)
   ! ------------------------------
   ! Define turbulent erosion rate
   ! ------------------------------
-call rave_event_and_value(1000,0) ! pop 20
-call rave_event_and_value(1000,21)
+call rave_end_region("Subsidence sink of cloud") ! pop 20
+call rave_begin_region("3.4 1st EROSION OF CLOUDS")
   DO JL=KIDIA,KFDIA
     ZLDIFDT(JL)=RCLDIFF*PTSPHY !original version
     !Increase by factor of 5 for convective points
@@ -1285,8 +1287,8 @@ call rave_event_and_value(1000,21)
   ! At the moment, works on mixed RH profile and partitioned ice/liq fraction
   ! so that it is similar to previous scheme
   ! Should apply RHw for liquid cloud and RHi for ice cloud separately 
-call rave_event_and_value(1000,0) ! pop 21
-call rave_event_and_value(1000,22)
+call rave_end_region("3.4 1st EROSION OF CLOUDS") ! pop 21
+call rave_begin_region("3.4 2nd EROSION OF CLOUDS")
   DO JL=KIDIA,KFDIA
     IF(ZLI(JL,JK) > ZEPSEC) THEN
       ! Calculate environmental humidity
@@ -1328,8 +1330,8 @@ call rave_event_and_value(1000,22)
   !  retained for the moment, and the level of approximation noted.  
   !----------------------------------------------------------------------
 
-call rave_event_and_value(1000,0) ! pop 22
-call rave_event_and_value(1000,23)
+call rave_end_region("3.4 2nd EROSION OF CLOUDS") ! pop 22
+call rave_begin_region("3.4 CONDENSATION EVAPORATION")
   DO JL=KIDIA,KFDIA
     ZDTDP   = ZRDCP*ZTP1(JL,JK)/PAP(JL,JK)
     ZDPMXDT = ZDP(JL)*ZQTMST
@@ -1382,8 +1384,8 @@ call rave_event_and_value(1000,23)
   ! Erosion term is LINEAR in L
   ! Changed to be uniform distribution in cloud region
 
-call rave_event_and_value(1000,0) ! pop 23
-call rave_event_and_value(1000,24)
+call rave_end_region("3.4 CONDENSATION EVAPORATION") ! pop 23
+call rave_begin_region("3.4a")
   DO JL=KIDIA,KFDIA
 
     ! Previous function based on DELTA DISTRIBUTION in cloud:
@@ -1413,8 +1415,8 @@ call rave_event_and_value(1000,24)
   ! 3.4b ZDQS(JL) < 0: FORMATION OF CLOUDS
   !----------------------------------------------------------------------
   ! (1) Increase of cloud water in existing clouds
-call rave_event_and_value(1000,0) ! pop 24
-call rave_event_and_value(1000,25)
+call rave_end_region("3.4a") ! pop 24
+call rave_begin_region("3.4b")
   DO JL=KIDIA,KFDIA
     IF(ZA(JL,JK) > ZEPSEC.AND.ZDQS(JL) <= -RLMIN) THEN
 
@@ -1453,8 +1455,8 @@ call rave_event_and_value(1000,25)
 
   ! (2) Generation of new clouds (da/dt>0)
   
-call rave_event_and_value(1000,0) ! pop 25
-call rave_event_and_value(1000,26)
+call rave_end_region("3.4b") ! pop 25
+call rave_begin_region("Generation of new clouds")
   DO JL=KIDIA,KFDIA
 
     IF(ZDQS(JL) <= -RLMIN .AND. ZA(JL,JK)<1.0_JPRB-ZEPSEC) THEN
@@ -1574,8 +1576,8 @@ call rave_event_and_value(1000,26)
   !-  (monodisperse ice particle size distribution)
   !-
   !--------------------------------------------------------
-call rave_event_and_value(1000,0) ! pop 26
-call rave_event_and_value(1000,27)
+call rave_end_region("Generation of new clouds") ! pop 26
+call rave_begin_region("3.7 Growth of ice")
   IF (IDEPICE == 1) THEN
   
   DO JL=KIDIA,KFDIA
@@ -1754,8 +1756,8 @@ call rave_event_and_value(1000,27)
   !              4  *** PRECIPITATION PROCESSES ***
   !######################################################################
 
-call rave_event_and_value(1000,0) ! pop 27
-call rave_event_and_value(1000,28)
+call rave_end_region("3.7 Growth of ice") ! pop 27
+call rave_begin_region("PRECIPITATION PROCESSES")
   !----------------------------------
   ! revise in-cloud consensate amount
   !----------------------------------
@@ -1773,8 +1775,8 @@ call rave_event_and_value(1000,28)
   !     There is no vertical memory required from the flux variable
   !----------------------------------------------------------------------
 
-call rave_event_and_value(1000,0) ! pop 28
-call rave_event_and_value(1000,29)
+call rave_end_region("PRECIPITATION PROCESSES") ! pop 28
+call rave_begin_region("4.2 SEDIMENTATION FALLING")
   DO JM = 1,NCLV
     IF (LLFALL(JM) .OR. JM == NCLDQI) THEN
       DO JL=KIDIA,KFDIA
@@ -1828,8 +1830,8 @@ call rave_event_and_value(1000,29)
   !   it to zero in a step function once clear-sky precip reaches
   !   zero.
   !---------------------------------------------------------------
-call rave_event_and_value(1000,0) ! pop 29
-call rave_event_and_value(1000,30)
+call rave_end_region("4.2 SEDIMENTATION FALLING") ! pop 29
+call rave_begin_region("Precip cover overlap")
   DO JL=KIDIA,KFDIA
     IF (ZQPRETOT(JL)>ZEPSEC) THEN
       ZCOVPTOT(JL) = 1.0_JPRB - ((1.0_JPRB-ZCOVPTOT(JL))*&
@@ -1852,8 +1854,8 @@ call rave_event_and_value(1000,30)
   !----------------------------------------------------------------------
   ! 4.3a AUTOCONVERSION TO SNOW
   !----------------------------------------------------------------------
-call rave_event_and_value(1000,0) ! pop 30
-call rave_event_and_value(1000,31)
+call rave_end_region("Precip cover overlap") ! pop 30
+call rave_begin_region("4.3a AUTOCONVERSION TO SNOW")
   DO JL=KIDIA,KFDIA
  
     IF(ZTP1(JL,JK) <= RTT) THEN
@@ -1884,8 +1886,8 @@ call rave_event_and_value(1000,31)
   !   but for now we keep this simple treatment
   !----------------------------------------------------------------------
 
-call rave_event_and_value(1000,0) ! pop 31
-call rave_event_and_value(1000,32)
+call rave_end_region("4.3a AUTOCONVERSION TO SNOW") ! pop 31
+call rave_begin_region("4.3b AUTOCONVERSION WARM CLOUDS")
    IF (ZLIQCLD(JL)>ZEPSEC) THEN
 
     !--------------------------------------------------------
@@ -2002,8 +2004,8 @@ call rave_event_and_value(1000,32)
   !      only active if T<0degC and supercooled liquid water is present
   !      AND if not Sundquist autoconversion (as this includes riming)
   !----------------------------------------------------------------------
-call rave_event_and_value(1000,0) ! pop 32
-call rave_event_and_value(1000,33)
+call rave_end_region("4.3b AUTOCONVERSION WARM CLOUDS") ! pop 32
+call rave_begin_region("RIMING")
   IF (IWARMRAIN > 1) THEN
 
   DO JL=KIDIA,KFDIA
@@ -2059,8 +2061,8 @@ call rave_event_and_value(1000,33)
   !       in situ ice and snow: could arise from LS advection or warming
   !       falling ice and snow: arrives by precipitation process
   !----------------------------------------------------------------------
-call rave_event_and_value(1000,0) ! pop 33
-call rave_event_and_value(1000,34)
+call rave_end_region("RIMING") ! pop 33
+call rave_begin_region("4.4a  MELTING OF SNOW and ICE")
   DO JL=KIDIA,KFDIA
     
     ZICETOT(JL)=ZQXFG(JL,NCLDQI)+ZQXFG(JL,NCLDQS)
@@ -2087,8 +2089,8 @@ call rave_event_and_value(1000,34)
   ENDDO
 
   ! Loop over frozen hydrometeors (ice, snow)
-call rave_event_and_value(1000,0) ! pop 34
-call rave_event_and_value(1000,35)
+call rave_end_region("4.4a  MELTING OF SNOW and ICE") ! pop 34
+call rave_begin_region("Loop over frozen hydrometeors")
   DO JM=1,NCLV
    IF (IPHASE(JM) == 2) THEN
     JN = IMELT(JM)
@@ -2112,8 +2114,8 @@ call rave_event_and_value(1000,35)
   !----------------------------------------------------------------------
   ! 4.4b  FREEZING of RAIN
   !----------------------------------------------------------------------
-call rave_event_and_value(1000,0) ! pop 35
-call rave_event_and_value(1000,36)
+call rave_end_region("Loop over frozen hydrometeors") ! pop 35
+call rave_begin_region("4.4b FREEZING of RAIN")
   DO JL=KIDIA,KFDIA 
 
     ! If rain present
@@ -2174,8 +2176,8 @@ call rave_event_and_value(1000,36)
   !----------------------------------------------------------------------
   ! 4.4c  FREEZING of LIQUID 
   !----------------------------------------------------------------------
-call rave_event_and_value(1000,0) ! pop 36
-call rave_event_and_value(1000,37)
+call rave_end_region("4.4b FREEZING of RAIN") ! pop 36
+call rave_begin_region("4.4c FREEZING of LIQUID")
   DO JL=KIDIA,KFDIA 
     ! not implicit yet... 
     ZFRZMAX(JL)=MAX((RTHOMO-ZTP1(JL,JK))*ZRLDCP,0.0_JPRB)
@@ -2198,8 +2200,8 @@ call rave_event_and_value(1000,37)
   !----------------------------------------
   ! Rain evaporation scheme from Sundquist
   !----------------------------------------
-call rave_event_and_value(1000,0) ! pop 37
-call rave_event_and_value(1000,38)
+call rave_end_region("4.4c FREEZING of LIQUID") ! pop 37
+call rave_begin_region("4.5 EVAPORATION OF RAIN/SNOW")
  IF (IEVAPRAIN == 1) THEN
 
   ! Rain
@@ -2366,8 +2368,8 @@ ENDIF ! on IEVAPRAIN
   ! 4.5   EVAPORATION OF SNOW
   !----------------------------------------------------------------------
   ! Snow
-call rave_event_and_value(1000,0) ! pop 38
-call rave_event_and_value(1000,39)
+call rave_end_region("4.5 EVAPORATION OF RAIN/SNOW") ! pop 38
+call rave_begin_region("4.5 EVAPORATION OF SNOW")
  IF (IEVAPSNOW == 1) THEN
   
   DO JL=KIDIA,KFDIA
@@ -2507,8 +2509,8 @@ ENDIF ! on IEVAPSNOW
   !--------------------------------------
   ! Evaporate small precipitation amounts
   !--------------------------------------
-call rave_event_and_value(1000,0) ! pop 39
-call rave_event_and_value(1000,40)
+call rave_end_region("4.5 EVAPORATION OF SNOW") ! pop 39
+call rave_begin_region("Evaporate small precipitation")
   DO JM=1,NCLV
    IF (LLFALL(JM)) THEN 
     DO JL=KIDIA,KFDIA
@@ -2529,8 +2531,8 @@ call rave_event_and_value(1000,40)
   !---------------------------
   ! 5.1 solver for cloud cover
   !---------------------------
-call rave_event_and_value(1000,0) ! pop 40
-call rave_event_and_value(1000,41)
+call rave_end_region("Evaporate small precipitation") ! pop 40
+call rave_begin_region("5.1 solver for cloud cover")
   DO JL=KIDIA,KFDIA
     ZANEW=(ZA(JL,JK)+ZSOLAC(JL))/(1.0_JPRB+ZSOLAB(JL))
     ZANEW=MIN(ZANEW,1.0_JPRB)
@@ -2552,7 +2554,7 @@ call rave_event_and_value(1000,41)
   ! since the clipping will alter the balance for the other vars
   !--------------------------------------------------------------
 
-call rave_event_and_value(1000,6)
+call rave_begin_region("Array Zeroing")
   DO JM=1,NCLV
     DO JN=1,NCLV
       DO JL=KIDIA,KFDIA
@@ -2564,9 +2566,9 @@ call rave_event_and_value(1000,6)
     ENDDO
   ENDDO
 
-call rave_event_and_value(1000,0) ! pop 6
-call rave_event_and_value(1000,0) ! pop 41
-call rave_event_and_value(1000,43)
+call rave_end_region("Array Zeroing") ! pop 6
+call rave_end_region("5.1 solver for cloud cover") ! pop 41
+call rave_begin_region("collect sink terms and mark")
   !----------------------------
   ! collect sink terms and mark
   !----------------------------
@@ -2581,8 +2583,8 @@ call rave_event_and_value(1000,43)
   !---------------------------------------
   ! calculate overshoot and scaling factor
   !---------------------------------------
-call rave_event_and_value(1000,0) ! pop 43
-call rave_event_and_value(1000,44)
+call rave_end_region("collect sink terms and mark") ! pop 43
+call rave_begin_region("calculate overshoot")
   DO JM=1,NCLV
     DO JL=KIDIA,KFDIA
       ZMAX=MAX(ZQX(JL,JK,JM),ZEPSEC)
@@ -2593,8 +2595,8 @@ call rave_event_and_value(1000,44)
   !--------------------------------------------------------
   ! now sort zratio to find out which species run out first
   !--------------------------------------------------------
-call rave_event_and_value(1000,0) ! pop 44
-call rave_event_and_value(1000,45)
+call rave_end_region("calculate overshoot") ! pop 44
+call rave_begin_region("sort zratio")
   DO JM=1,NCLV
     DO JL=KIDIA,KFDIA
       IORDER(JL,JM)=-999
@@ -2626,21 +2628,21 @@ call rave_event_and_value(1000,45)
   ! scale the sink terms, in the correct order, 
   ! recalculating the scale factor each time
   !--------------------------------------------
-call rave_event_and_value(1000,0) ! pop 45
-call rave_event_and_value(1000,6)
+call rave_end_region("sort zratio") ! pop 45
+call rave_begin_region("Array Zeroing")
   DO JM=1,NCLV
     DO JL=KIDIA,KFDIA
       ZSINKSUM(JL,JM)=0.0_JPRB
     ENDDO
   ENDDO
 
-call rave_event_and_value(1000,0) ! pop 6
-call rave_event_and_value(1000,70)
+call rave_end_region("Array Zeroing") ! pop 6
+call rave_begin_region("Recalculate Sum Loop")
   !----------------
   ! recalculate sum
   !----------------
   DO JM=1,NCLV
-call rave_event_and_value(1000,47)
+call rave_begin_region("recalculate sum")
 !   DO JN=1,NCLV
     DO JL=KIDIA,KFDIA
       JO=IORDER(JL,JM)
@@ -2654,22 +2656,22 @@ call rave_event_and_value(1000,47)
       ENDDO
       ZSINKSUM(JL,JO)=ZSINKSUM(JL,JO)-SUM(ZSOLQA(JL,JO,1:NCLV))
     ENDDO
-call rave_event_and_value(1000,0) ! pop 47
+call rave_end_region("recalculate sum") ! pop 47
     !---------------------------
     ! recalculate scaling factor
     !---------------------------
-call rave_event_and_value(1000,48)
+call rave_begin_region("recalculate scaling factor")
     DO JL=KIDIA,KFDIA
       JO=IORDER(JL,JM)
       ZMM=MAX(ZQX(JL,JK,JO),ZEPSEC)
       ZRR=MAX(ZSINKSUM(JL,JO),ZMM)
       ZRATIO(JL,JO)=ZMM/ZRR
     ENDDO
-call rave_event_and_value(1000,0) ! pop 48
+call rave_end_region("recalculate scaling factor") ! pop 48
     !------
     ! scale
     !------
-call rave_event_and_value(1000,49)
+call rave_begin_region("scale")
     DO JL=KIDIA,KFDIA
       JO=IORDER(JL,JM)
       ZZRATIO=ZRATIO(JL,JO)
@@ -2682,9 +2684,9 @@ call rave_event_and_value(1000,49)
         ENDIF
       ENDDO
     ENDDO
-call rave_event_and_value(1000,0) ! pop 49
+call rave_end_region("scale") ! pop 49
   ENDDO
-call rave_event_and_value(1000,0) ! pop 70
+call rave_end_region("Recalculate Sum Loop") ! pop 70
 
   !--------------------------------------------------------------
   ! 5.2.2 Solver
@@ -2693,7 +2695,7 @@ call rave_event_and_value(1000,0) ! pop 70
   !------------------------
   ! set the LHS of equation  
   !------------------------
-call rave_event_and_value(1000,50)
+call rave_begin_region("5.2.2 Solver lhs")
   DO JM=1,NCLV
     DO JN=1,NCLV
       !----------------------------------------------
@@ -2720,8 +2722,8 @@ call rave_event_and_value(1000,50)
   !------------------------
   ! set the RHS of equation  
   !------------------------
-call rave_event_and_value(1000,0) ! pop 50
-call rave_event_and_value(1000,51)
+call rave_end_region("5.2.2 Solver lhs") ! pop 50
+call rave_begin_region("RHS of equation")
   DO JM=1,NCLV
     DO JL=KIDIA,KFDIA
       !---------------------------------
@@ -2747,8 +2749,8 @@ call rave_event_and_value(1000,51)
   !       modifications.
 
   ! Non pivoting recursive factorization 
-call rave_event_and_value(1000,0) ! pop 51
-call rave_event_and_value(1000,52)
+call rave_end_region("RHS of equation") ! pop 51
+call rave_begin_region("Non pivoting recursive")
   DO JN = 1, NCLV-1  ! number of steps
     DO JM = JN+1,NCLV ! row index
       ZQLHS(KIDIA:KFDIA,JM,JN)=ZQLHS(KIDIA:KFDIA,JM,JN) &
@@ -2763,8 +2765,8 @@ call rave_event_and_value(1000,52)
 
   ! Backsubstitution 
   !  step 1 
-call rave_event_and_value(1000,0) ! pop 52
-call rave_event_and_value(1000,53)
+call rave_end_region("Non pivoting recursive") ! pop 52
+call rave_begin_region("Backsubstitution step 1")
   DO JN=2,NCLV
     DO JM = 1,JN-1
       ZQXN(KIDIA:KFDIA,JN)=ZQXN(KIDIA:KFDIA,JN)-ZQLHS(KIDIA:KFDIA,JN,JM) &
@@ -2772,8 +2774,8 @@ call rave_event_and_value(1000,53)
     ENDDO
   ENDDO
   !  step 2
-call rave_event_and_value(1000,0) ! pop 53
-call rave_event_and_value(1000,54)
+call rave_end_region("Backsubstitution step 1") ! pop 53
+call rave_begin_region("Backsubstitution step 2")
   ZQXN(KIDIA:KFDIA,NCLV)=ZQXN(KIDIA:KFDIA,NCLV)/ZQLHS(KIDIA:KFDIA,NCLV,NCLV)
   DO JN=NCLV-1,1,-1
     DO JM = JN+1,NCLV
@@ -2786,8 +2788,8 @@ call rave_event_and_value(1000,54)
   ! Ensure no small values (including negatives) remain in cloud variables nor
   ! precipitation rates.
   ! Evaporate l,i,r,s to water vapour. Latent heating taken into account below
-call rave_event_and_value(1000,0) ! pop 54
-call rave_event_and_value(1000,55)
+call rave_end_region("Backsubstitution step 2") ! pop 54
+call rave_begin_region("Ensure no small values")
   DO JN=1,NCLV-1
     DO JL=KIDIA,KFDIA
       IF (ZQXN(JL,JN) < ZEPSEC) THEN
@@ -2800,8 +2802,8 @@ call rave_event_and_value(1000,55)
   !--------------------------------
   ! variables needed for next level
   !--------------------------------
-call rave_event_and_value(1000,0) ! pop 55
-call rave_event_and_value(1000,56)
+call rave_end_region("Ensure no small values") ! pop 55
+call rave_begin_region("variables needed for next level")
   DO JM=1,NCLV
     DO JL=KIDIA,KFDIA
       ZQXNM1(JL,JM)    = ZQXN(JL,JM)
@@ -2815,8 +2817,8 @@ call rave_event_and_value(1000,56)
   !     It is this scaled flux that must be used for source to next layer
   !------------------------------------------------------------------------
 
-call rave_event_and_value(1000,0) ! pop 56
-call rave_event_and_value(1000,57)
+call rave_end_region("variables needed for next level") ! pop 56
+call rave_begin_region("5.3 Precipitation/sedimentation")
   DO JM=1,NCLV
     DO JL=KIDIA,KFDIA
       ZPFPLSX(JL,JK+1,JM) = ZFALLSINK(JL,JM)*ZQXN(JL,JM)*ZRDTGDP(JL)
@@ -2841,8 +2843,8 @@ call rave_event_and_value(1000,57)
   ! 6.1 Temperature and CLV budgets 
   !--------------------------------
 
-call rave_event_and_value(1000,0) ! pop 57
-call rave_event_and_value(1000,58)
+call rave_end_region("5.3 Precipitation/sedimentation") ! pop 57
+call rave_begin_region("6.1 Temperature")
   DO JM=1,NCLV-1
     DO JL=KIDIA,KFDIA
 
@@ -2877,8 +2879,8 @@ call rave_event_and_value(1000,58)
 
   ENDDO
 
-call rave_event_and_value(1000,0) ! pop 58
-call rave_event_and_value(1000,59)
+call rave_end_region("6.1 Temperature") ! pop 58
+call rave_begin_region("6.2 Humidity budget")
   DO JL=KIDIA,KFDIA
     !----------------------
     ! 6.2 Humidity budget
@@ -2894,23 +2896,23 @@ call rave_event_and_value(1000,59)
 !--------------------------------------------------
 ! Copy precipitation fraction into output variable
 !-------------------------------------------------
-call rave_event_and_value(1000,0) ! pop 59
-call rave_event_and_value(1000,60)
+call rave_end_region("6.2 Humidity budget") ! pop 59
+call rave_begin_region("Copy into output variable")
   DO JL=KIDIA,KFDIA
     PCOVPTOT(JL,JK) = ZCOVPTOT(JL)
   ENDDO
  
-call rave_event_and_value(1000,0) ! pop 60
+call rave_end_region("Copy into output variable") ! pop 60
 ENDDO ! on vertical level JK
 !----------------------------------------------------------------------
 !                       END OF VERTICAL LOOP
 !----------------------------------------------------------------------
-call rave_event_and_value(1000,0) ! pop 4
+call rave_end_region("Vertical Loop") ! pop 4
 !######################################################################
 !              8  *** FLUX/DIAGNOSTICS COMPUTATIONS ***
 !######################################################################
 
-call rave_event_and_value(1000,5)
+call rave_begin_region("Flux Comp")
 !--------------------------------------------------------------------
 ! Copy general precip arrays back into PFP arrays for GRIB archiving
 ! Add rain and liquid fluxes, ice and snow fluxes
@@ -2996,7 +2998,7 @@ DO JK=1,KLEV+1
   ENDDO
 ENDDO
 
-call rave_event_and_value(1000,0) ! pop 5
+call rave_end_region("Flux Comp") ! pop 5
 !===============================================================================
 END ASSOCIATE
 !IF (LHOOK) CALL DR_HOOK('CLOUDSC',1,ZHOOK_HANDLE)
