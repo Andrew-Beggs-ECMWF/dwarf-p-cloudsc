@@ -107,6 +107,9 @@ CONTAINS
     TYPE(TOETHF)    :: YDOETHF
     TYPE(TECLDP)    :: YDECLDP
 
+    REAL(KIND=JPRB)    :: a(1024), b(1024), c(1024)
+    INTEGER(KIND=JPIM) :: i
+
     NGPBLKS = (NGPTOT / NPROMA) + MIN(MOD(NGPTOT,NPROMA), 1)
 1003 format(5x,'NUMPROC=',i0,', NUMOMP=',i0,', NGPTOTG=',i0,', NPROMA=',i0,', NGPBLKS=',i0)
     if (irank == 0) then
@@ -176,6 +179,14 @@ CONTAINS
     !call rave_name_value(1000,60,"Copy into output variable")
     !call rave_name_value(1000,61,"Tear Down")
     !call rave_name_value(1000,70,"Recalculate Sum Loop")
+         do i = 1, 1024
+         a(i)=i
+         b(i)=2
+         enddo
+         call rave_begin_region("Vec Maths Lib Sanity Test")
+         c(:) = a(:) ** b(:)
+         call rave_end_region("Vec Maths Lib Sanity Test")
+         print *, "Sanity Test: ", a(45), " to the power of ", b(45), " is ", c(45)
 
     ! Global timer for the parallel region
     CALL TIMER%START(NUMOMP)
