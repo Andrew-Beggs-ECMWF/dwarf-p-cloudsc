@@ -628,6 +628,7 @@ IMELT(NCLDQS)=NCLDQR
 ! -----------------------------------------------
 ! INITIALIZATION OF OUTPUT TENDENCIES
 ! -----------------------------------------------
+call rave_end_region("Setup Consts")
 call rave_begin_region("Array Zeroing")
 DO JK=1,KLEV
   DO JL=KIDIA,KFDIA
@@ -644,7 +645,7 @@ DO JM=1,NCLV-1
   ENDDO
 ENDDO
 call rave_end_region("Array Zeroing") ! pop 6
-!call rave_begin_region("Setup Consts")
+call rave_begin_region("Setup Consts")
 ! -------------------------
 ! set up fall speeds in m/s
 ! -------------------------
@@ -696,6 +697,7 @@ ENDDO
 !-------------
 ! zero arrays
 !-------------
+call rave_end_region("Init and Tidy") ! pop 3
 call rave_begin_region("Array Zeroing")
 ZPFPLSX(:,:,:) = 0.0_JPRB ! precip fluxes
 ZQXN2D(:,:,:)  = 0.0_JPRB ! end of timestep values in 2D
@@ -703,7 +705,7 @@ ZLNEG(:,:,:)   = 0.0_JPRB ! negative input check
 PRAINFRAC_TOPRFZ(:) =0.0_JPRB ! rain fraction at top of refreezing layer
 LLRAINLIQ(:) = .TRUE.  ! Assume all raindrops are liquid initially
 call rave_end_region("Array Zeroing") ! pop 6
-call rave_end_region("Init and Tidy") ! pop 3
+!call rave_end_region("Init and Tidy") ! pop 3
 call rave_begin_region("Tidy small cloud cover")
 ! ----------------------------------------------------
 ! Tidy up very small cloud cover or total cloud water
@@ -858,6 +860,7 @@ ENDDO
 ! Reset single level variables
 !-----------------------------
 
+call rave_end_region("Find tropopause level") ! pop 11
 call rave_begin_region("Array Zeroing")
 ZANEWM1(:)  = 0.0_JPRB
 ZDA(:)      = 0.0_JPRB
@@ -871,8 +874,8 @@ ZCLDTOPDIST(:) = 0.0_JPRB
 !######################################################################
 
 call rave_end_region("Array Zeroing") ! pop 6
-call rave_end_region("Find tropopause level") ! pop 11
-call rave_begin_region("Vertical Loop")
+!call rave_end_region("Find tropopause level") ! pop 11
+!call rave_begin_region("Begin Vertical Loop")
 
 !----------------------------------------------------------------------
 !                       START OF VERTICAL LOOP
@@ -880,6 +883,7 @@ call rave_begin_region("Vertical Loop")
 
 DO JK=NCLDTOP,KLEV
 
+call rave_begin_region("Begin Vertical Loop")
 !----------------------------------------------------------------------
 ! 3.0 INITIALIZE VARIABLES
 !----------------------------------------------------------------------
@@ -897,6 +901,7 @@ DO JK=NCLDTOP,KLEV
   ! Set KLON arrays to zero
   !---------------------------------
 
+call rave_end_region("Begin Vertical Loop")
 call rave_begin_region("Array Zeroing")
   ZLICLD(:)   = 0.0_JPRB                                
   ZRAINAUT(:) = 0.0_JPRB  ! currently needed for diags  
@@ -1037,9 +1042,9 @@ call rave_begin_region("3.1.1 Supersaturation limit")
     ! Needs to be set for all temperatures
     ZFOKOOP(JL)=FOKOOP(ZTP1(JL,JK))
   ENDDO
-call rave_end_region("3.1.1 Supersaturation limit") ! pop 14
+!call rave_end_region("3.1.1 Supersaturation limit") ! pop 14
   DO JL=KIDIA,KFDIA
-call rave_begin_region("3.1.1 Supersaturation limit")
+!call rave_begin_region("3.1.1 Supersaturation limit looped")
 
     IF (ZTP1(JL,JK)>=RTT .OR. NSSOPT==0) THEN
       ZFAC  = 1.0_JPRB
@@ -1055,8 +1060,8 @@ call rave_begin_region("3.1.1 Supersaturation limit")
     ! [#Note: QSICE or QSLIQ]
     !-------------------------------------------------------------------
 
-call rave_end_region("3.1.1 Supersaturation limit") ! pop 14
-call rave_begin_region("3.1.2 Calculate supersaturation")
+!call rave_end_region("3.1.1 Supersaturation limit looped") ! pop 14
+!call rave_begin_region("3.1.2 Calculate supersaturation")
     ! Calculate supersaturation to add to cloud
     IF (ZA(JL,JK) > 1.0_JPRB-RAMIN) THEN
       ZSUPSAT(JL) = MAX((ZQX(JL,JK,NCLDQV)-ZFAC*ZQSICE(JL,JK))/ZCORQSICE(JL)&
@@ -1076,8 +1081,8 @@ call rave_begin_region("3.1.2 Calculate supersaturation")
     ! freezing then the supersaturation is turned instantly to ice.
     !--------------------------------------------------------------------
 
-call rave_end_region("3.1.2 Calculate supersaturation") ! pop 15
-call rave_begin_region("supersaturation into liquid water")
+!call rave_end_region("3.1.2 Calculate supersaturation") ! pop 15
+!call rave_begin_region("supersaturation into liquid water")
     IF (ZSUPSAT(JL) > ZEPSEC) THEN
 
       IF (ZTP1(JL,JK) > RTHOMO) THEN
@@ -1103,8 +1108,8 @@ call rave_begin_region("supersaturation into liquid water")
     ! 3.1.3 Include supersaturation from previous timestep
     ! (Calculated in sltENDIF semi-lagrangian LDSLPHY=T)
     !-------------------------------------------------------    
-call rave_end_region("supersaturation into liquid water") ! pop 16
-call rave_begin_region("3.1.3 Include supersaturation")
+!call rave_end_region("supersaturation into liquid water") ! pop 16
+!call rave_begin_region("3.1.3 Include supersaturation")
       IF (PSUPSAT(JL,JK)>ZEPSEC) THEN
         IF (ZTP1(JL,JK) > RTHOMO) THEN
           ! Turn supersaturation into liquid water
@@ -1127,9 +1132,11 @@ call rave_begin_region("3.1.3 Include supersaturation")
         ! Store cloud budget diagnostics if required
       ENDIF
 
+!call rave_end_region("3.1.3 Include supersaturation")
   ENDDO ! on JL
+call rave_end_region("3.1.1 Supersaturation limit") ! pop 14
 
-call rave_end_region("3.1.3 Include supersaturation")
+!call rave_end_region("3.1.3 Include supersaturation")
   !---------------------------------------------------------------------
   !  3.2  DETRAINMENT FROM CONVECTION
   !---------------------------------------------------------------------
@@ -1886,8 +1893,8 @@ call rave_begin_region("4.3a AUTOCONVERSION TO SNOW")
   !   but for now we keep this simple treatment
   !----------------------------------------------------------------------
 
-call rave_end_region("4.3a AUTOCONVERSION TO SNOW") ! pop 31
-call rave_begin_region("4.3b AUTOCONVERSION WARM CLOUDS")
+!call rave_end_region("4.3a AUTOCONVERSION TO SNOW") ! pop 31
+!call rave_begin_region("4.3b AUTOCONVERSION WARM CLOUDS")
    IF (ZLIQCLD(JL)>ZEPSEC) THEN
 
     !--------------------------------------------------------
@@ -2004,7 +2011,8 @@ call rave_begin_region("4.3b AUTOCONVERSION WARM CLOUDS")
   !      only active if T<0degC and supercooled liquid water is present
   !      AND if not Sundquist autoconversion (as this includes riming)
   !----------------------------------------------------------------------
-call rave_end_region("4.3b AUTOCONVERSION WARM CLOUDS") ! pop 32
+!call rave_end_region("4.3b AUTOCONVERSION WARM CLOUDS") ! pop 32
+call rave_end_region("4.3a AUTOCONVERSION TO SNOW") ! pop 31
 call rave_begin_region("RIMING")
   IF (IWARMRAIN > 1) THEN
 
@@ -2554,6 +2562,7 @@ call rave_begin_region("5.1 solver for cloud cover")
   ! since the clipping will alter the balance for the other vars
   !--------------------------------------------------------------
 
+call rave_end_region("5.1 solver for cloud cover") ! pop 41
 call rave_begin_region("Array Zeroing")
   DO JM=1,NCLV
     DO JN=1,NCLV
@@ -2567,7 +2576,7 @@ call rave_begin_region("Array Zeroing")
   ENDDO
 
 call rave_end_region("Array Zeroing") ! pop 6
-call rave_end_region("5.1 solver for cloud cover") ! pop 41
+!call rave_end_region("5.1 solver for cloud cover") ! pop 41
 call rave_begin_region("collect sink terms and mark")
   !----------------------------
   ! collect sink terms and mark
@@ -2641,8 +2650,9 @@ call rave_begin_region("Recalculate Sum Loop")
   !----------------
   ! recalculate sum
   !----------------
+!call rave_begin_region("recalculate sum")
   DO JM=1,NCLV
-call rave_begin_region("recalculate sum")
+!call rave_begin_region("recalculate sum")
 !   DO JN=1,NCLV
     DO JL=KIDIA,KFDIA
       JO=IORDER(JL,JM)
@@ -2656,22 +2666,22 @@ call rave_begin_region("recalculate sum")
       ENDDO
       ZSINKSUM(JL,JO)=ZSINKSUM(JL,JO)-SUM(ZSOLQA(JL,JO,1:NCLV))
     ENDDO
-call rave_end_region("recalculate sum") ! pop 47
+!call rave_end_region("recalculate sum") ! pop 47
     !---------------------------
     ! recalculate scaling factor
     !---------------------------
-call rave_begin_region("recalculate scaling factor")
+!call rave_begin_region("recalculate scaling factor")
     DO JL=KIDIA,KFDIA
       JO=IORDER(JL,JM)
       ZMM=MAX(ZQX(JL,JK,JO),ZEPSEC)
       ZRR=MAX(ZSINKSUM(JL,JO),ZMM)
       ZRATIO(JL,JO)=ZMM/ZRR
     ENDDO
-call rave_end_region("recalculate scaling factor") ! pop 48
+!call rave_end_region("recalculate scaling factor") ! pop 48
     !------
     ! scale
     !------
-call rave_begin_region("scale")
+!call rave_begin_region("scale")
     DO JL=KIDIA,KFDIA
       JO=IORDER(JL,JM)
       ZZRATIO=ZRATIO(JL,JO)
@@ -2684,7 +2694,7 @@ call rave_begin_region("scale")
         ENDIF
       ENDDO
     ENDDO
-call rave_end_region("scale") ! pop 49
+!call rave_end_region("scale") ! pop 49
   ENDDO
 call rave_end_region("Recalculate Sum Loop") ! pop 70
 
@@ -2907,7 +2917,7 @@ ENDDO ! on vertical level JK
 !----------------------------------------------------------------------
 !                       END OF VERTICAL LOOP
 !----------------------------------------------------------------------
-call rave_end_region("Vertical Loop") ! pop 4
+!call rave_end_region("Vertical Loop") ! pop 4
 !######################################################################
 !              8  *** FLUX/DIAGNOSTICS COMPUTATIONS ***
 !######################################################################

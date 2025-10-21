@@ -224,10 +224,10 @@ CONTAINS
               & YDOMCST, YDOETHF, YDECLDP)
 
          !call rave_end_region("Driver Loop") ! pop 1
-         call rave_begin_region("Tear Down")
          ! Log number of columns processed by this thread
          CALL TIMER%THREAD_LOG(TID, IGPC=ICEND)
       ENDDO
+         call rave_begin_region("Tear Down")
 
       !-- The "nowait" is here to get correct local timings (tloc) per thread
       !   i.e. we should not wait for slowest thread to finish before measuring tloc
@@ -241,6 +241,7 @@ CONTAINS
 
       CALL TIMER%PRINT_PERFORMANCE(NPROMA, NGPBLKS, NGPTOT)
     
+         call rave_end_region("Tear Down")
   END SUBROUTINE CLOUDSC_DRIVER
 
 END MODULE CLOUDSC_DRIVER_MOD
