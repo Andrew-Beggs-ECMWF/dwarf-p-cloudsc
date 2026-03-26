@@ -22,7 +22,8 @@ module_unload() {
 
 module_load llvm/EPI-development
 #module_load openmpi/riscv/4.1.6_llvm1.0
-module_load openmpi/ubuntu/4.1.6_llvm1.0
+#module_load openmpi/ubuntu/4.1.6_llvm1.0
+module_load openmpi/riscv/4.1.6_llvm1.0
 module_load hdf5/ubuntu/1.14.6_llvmEPIdev
 module_load cmake/3.28.1
 

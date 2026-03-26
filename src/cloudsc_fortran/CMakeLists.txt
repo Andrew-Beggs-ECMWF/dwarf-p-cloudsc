@@ -22,7 +22,8 @@ function( cloudsc_add_fortran_exe )
 
     add_library(rave_obj-${prec} OBJECT IMPORTED GLOBAL)
     #set_property(TARGET rave_obj-${prec} PROPERTY IMPORTED_OBJECTS /apps/x86/rave/rave-latest/interfaces/rave_user_events_f.o)
-    set_property(TARGET rave_obj-${prec} PROPERTY IMPORTED_OBJECTS /apps/x86/rave/rave-frozen-09-2025/interfaces/rave_user_events_f.o)
+    #set_property(TARGET rave_obj-${prec} PROPERTY IMPORTED_OBJECTS /apps/x86/rave/rave-frozen-09-2025/interfaces/rave_user_events_f.o)
+    set_property(TARGET rave_obj-${prec} PROPERTY IMPORTED_OBJECTS /apps/x86/rave/rave-development/interfaces/rave_user_events_f.o)
 
     ecbuild_add_executable(
         TARGET ${_CL_TARGET}-${prec}
